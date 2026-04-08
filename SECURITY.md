@@ -18,27 +18,27 @@ If you discover a security vulnerability in this project, please report it respo
 
 ## Scope
 
-This repository is the legacy compatibility GitHub Action bundle. Some issues belong here, some belong in the canonical action repository, and some belong in the source repository:
+This repository is the canonical GitHub Action bundle. Some issues belong here, some belong in the legacy compatibility repository, and some belong in the source repository:
 
-- Action-repository scope:
-  - incorrect `action.yml` metadata
-  - Marketplace-specific packaging mistakes
-  - broken README examples for the published action
 - Canonical action-repository scope:
-  - incorrect sync from the legacy compatibility repository into `hashgraph-online/ai-plugin-scanner-action`
-  - missing release tags or release notes in the canonical repository
+  - incorrect `action.yml` metadata
+  - broken README examples for the canonical action slug
+  - missing release tags or release notes in `hashgraph-online/ai-plugin-scanner-action`
+- Legacy compatibility scope:
+  - problems specific to `hashgraph-online/hol-codex-plugin-scanner-action`
+  - mirror drift between the canonical and compatibility repositories
 - Source-repository scope:
   - scanner findings, scoring, verification, or submission logic
   - CLI behavior
-  - release automation that generates this bundle
+  - release automation that produces this bundle
 
 Source repository:
 
 - [hashgraph-online/ai-plugin-scanner](https://github.com/hashgraph-online/ai-plugin-scanner)
 
-Canonical action repository:
+Legacy compatibility repository:
 
-- [hashgraph-online/ai-plugin-scanner-action](https://github.com/hashgraph-online/ai-plugin-scanner-action)
+- [hashgraph-online/hol-codex-plugin-scanner-action](https://github.com/hashgraph-online/hol-codex-plugin-scanner-action)
 
 ## Security Best Practices
 

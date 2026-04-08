@@ -1,0 +1,191 @@
+name: Sync Legacy Compatibility Repo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - README.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - .github/workflows/sync-legacy-repo.yml
+      - LICENSE
+      - action.yml
+      - scanner-version.txt
+      - cisco-version.txt
+      - pypi-attestations-version.txt
+      - .github/workflows/e2e-action.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    if: github.repository == 'hashgraph-online/ai-plugin-scanner-action'
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_REPOSITORY: hashgraph-online/ai-plugin-scanner-action
+      TARGET_REPOSITORY: hashgraph-online/hol-codex-plugin-scanner-action
+    steps:
+      - name: Checkout canonical repo
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+
+      - name: Require legacy repo token
+        env:
+          LEGACY_ACTION_REPO_TOKEN: ${{ secrets.LEGACY_ACTION_REPO_TOKEN }}
+        run: |
+          if [ -z "$LEGACY_ACTION_REPO_TOKEN" ]; then
+            echo "LEGACY_ACTION_REPO_TOKEN is required to sync the legacy compatibility repository." >&2
+            exit 1
+          fi
+
+      - name: Clone legacy repo
+        env:
+          LEGACY_ACTION_REPO_TOKEN: ${{ secrets.LEGACY_ACTION_REPO_TOKEN }}
+        run: |
+          git clone "https://x-access-token:${LEGACY_ACTION_REPO_TOKEN}@github.com/${TARGET_REPOSITORY}.git" legacy-repo
+
+      - name: Sync legacy working tree
+        run: |
+          shared_files=(
+            "action.yml"
+            "LICENSE"
+            "scanner-version.txt"
+            "cisco-version.txt"
+            "pypi-attestations-version.txt"
+            ".github/workflows/e2e-action.yml"
+          )
+
+          for relative_path in "${shared_files[@]}"; do
+            mkdir -p "legacy-repo/$(dirname "$relative_path")"
+            cp "$relative_path" "legacy-repo/$relative_path"
+          done
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          canonical = Path("README.md").read_text()
+          legacy = canonical
+          legacy = legacy.replace(
+              "[![Latest Release](https://img.shields.io/github/v/release/hashgraph-online/ai-plugin-scanner-action?display_name=tag)](https://github.com/hashgraph-online/ai-plugin-scanner-action/releases/latest)",
+              "[![Latest Release](https://img.shields.io/github/v/release/hashgraph-online/hol-codex-plugin-scanner-action?display_name=tag)](https://github.com/hashgraph-online/hol-codex-plugin-scanner-action/releases/latest)",
+          )
+          legacy = legacy.replace(
+              "[![Canonical Repository](https://img.shields.io/badge/github-canonical_repo-0A84FF)](https://github.com/hashgraph-online/ai-plugin-scanner-action)",
+              "[![Canonical Repository](https://img.shields.io/badge/github-canonical_repo-0A84FF)](https://github.com/hashgraph-online/ai-plugin-scanner-action)\n[![Legacy Compatibility Repository](https://img.shields.io/badge/github-legacy_slug-475569)](https://github.com/hashgraph-online/hol-codex-plugin-scanner-action)",
+          )
+          legacy = legacy.replace(
+              "| ![Hashgraph Online Logo](https://hol.org/brand/Logo_Whole_Dark.png) | Canonical GitHub Action repository for scanning AI plugin repositories across Codex, Claude, Gemini, and OpenCode ecosystems for security, publishability, runtime readiness, and trust signals. The action emits structured reports, SARIF, policy results, and submission metadata while staying aligned to the main scanner release train.<br><br>[Latest Release](https://github.com/hashgraph-online/ai-plugin-scanner-action/releases/latest)<br>[Canonical Repository](https://github.com/hashgraph-online/ai-plugin-scanner-action)<br>[Scanner Source of Truth](https://github.com/hashgraph-online/ai-plugin-scanner/tree/main/action)<br>[Report an Issue](https://github.com/hashgraph-online/ai-plugin-scanner/issues) |",
+              "| ![Hashgraph Online Logo](https://hol.org/brand/Logo_Whole_Dark.png) | Legacy compatibility GitHub Action repository for scanning AI plugin repositories across Codex, Claude, Gemini, and OpenCode ecosystems for security, publishability, runtime readiness, and trust signals. The canonical slug is now [`hashgraph-online/ai-plugin-scanner-action`](https://github.com/hashgraph-online/ai-plugin-scanner-action), while this repository stays live so existing `uses: hashgraph-online/hol-codex-plugin-scanner-action@v1` workflows keep working.<br><br>[Canonical Repository](https://github.com/hashgraph-online/ai-plugin-scanner-action)<br>[Legacy Compatibility Repository](https://github.com/hashgraph-online/hol-codex-plugin-scanner-action)<br>[Scanner Source of Truth](https://github.com/hashgraph-online/ai-plugin-scanner/tree/main/action)<br>[Report an Issue](https://github.com/hashgraph-online/ai-plugin-scanner/issues) |",
+          )
+          legacy = legacy.replace(
+              "Use `hashgraph-online/ai-plugin-scanner-action@v1` in new workflows. The legacy `hashgraph-online/hol-codex-plugin-scanner-action@v1` slug remains supported for compatibility.",
+              "This repository is the legacy compatibility wrapper for the scanner action. The main scanner repo remains the source of truth, and the preferred action slug is now `hashgraph-online/ai-plugin-scanner-action@v1`.\n\nUse `hashgraph-online/ai-plugin-scanner-action@v1` in new workflows. Existing `hashgraph-online/hol-codex-plugin-scanner-action@v1` workflows remain supported and receive the same action bundle and release tags through the canonical sync workflow.",
+          )
+          legacy = legacy.replace(
+              "- This is the primary published repository for the action.\n- `.github/workflows/sync-legacy-repo.yml` mirrors the same action bundle, exact release tags, and floating `v1` tag into `hashgraph-online/hol-codex-plugin-scanner-action`.\n- Configure `LEGACY_ACTION_REPO_TOKEN` in this repository so the sync workflow can push into the legacy compatibility repository, publish autogenerated release notes there, and keep the old Marketplace slug current.",
+              "- Keep the legacy compatibility slug alive for GitHub Marketplace and existing workflows.\n- Mirror the same action bundle, exact release tags, and floating `v1` tag into `hashgraph-online/hol-codex-plugin-scanner-action` through `.github/workflows/sync-legacy-repo.yml`.\n- Configure `LEGACY_ACTION_REPO_TOKEN` in this repository so the sync workflow can push into `hashgraph-online/hol-codex-plugin-scanner-action`, publish autogenerated release notes there, and keep the compatibility repo current.",
+          )
+          Path("legacy-repo/README.md").write_text(legacy)
+
+          canonical_contributing = Path("CONTRIBUTING.md").read_text()
+          legacy_contributing = canonical_contributing.replace(
+              "Thanks for helping maintain the canonical GitHub Action bundle for `plugin-scanner` (legacy package alias: `codex-plugin-scanner`).",
+              "Thanks for helping maintain the Marketplace-facing bundle for `plugin-scanner` (legacy package alias: `codex-plugin-scanner`).",
+          )
+          legacy_contributing = legacy_contributing.replace(
+              "This repository is the preferred public GitHub Action slug for the scanner. The implementation source of truth for scanner behavior lives in:",
+              "This repository is the legacy compatibility repository for the GitHub Action. The implementation source of truth lives in:",
+          )
+          legacy_contributing = legacy_contributing.replace(
+              "Most functional changes should start in the source repository and then be published into this canonical repository and the legacy compatibility repository through the release sync workflow.",
+              "Most functional changes should start in the source repository and then be published into this action repository and the canonical action repository through the release sync workflow.",
+          )
+          legacy_contributing = legacy_contributing.replace(
+              "Changes that are appropriate in this repository:\n\n- README, Marketplace copy, and examples for the canonical action slug\n- action metadata in [`action.yml`](./action.yml)\n- release-only docs like this contributing guide\n- canonical action release wiring",
+              "Changes that are appropriate in this repository:\n\n- README, Marketplace copy, and examples\n- action metadata in [`action.yml`](./action.yml)\n- release-only docs like this contributing guide\n- Marketplace-facing issue triage and support text",
+          )
+          legacy_contributing = legacy_contributing.replace(
+              "2. Make sure README examples use the canonical slug: `hashgraph-online/ai-plugin-scanner-action@v1`.",
+              "2. Make sure README examples prefer `hashgraph-online/ai-plugin-scanner-action@v1` and clearly preserve the legacy `hashgraph-online/hol-codex-plugin-scanner-action@v1` slug only for compatibility.",
+          )
+          legacy_contributing = legacy_contributing.replace(
+              "4. If release/version copy changes, keep it aligned with the latest published scanner release and the compatibility repository mirror.",
+              "4. If release/version copy changes, keep it aligned with the latest published scanner release and Marketplace listing.",
+          )
+          legacy_contributing = legacy_contributing.replace(
+              "- Link the related source-repo PR when the update was generated from `ai-plugin-scanner`.",
+              "- Link the related source-repo PR when the update was generated from `ai-plugin-scanner`.\n- Keep the canonical repo aligned with any user-facing changes that should flow into `hashgraph-online/ai-plugin-scanner-action`.",
+          )
+          Path("legacy-repo/CONTRIBUTING.md").write_text(legacy_contributing)
+
+          canonical_security = Path("SECURITY.md").read_text()
+          legacy_security = canonical_security.replace(
+              "This repository is the canonical GitHub Action bundle. Some issues belong here, some belong in the legacy compatibility repository, and some belong in the source repository:",
+              "This repository is the legacy compatibility GitHub Action bundle. Some issues belong here, some belong in the canonical action repository, and some belong in the source repository:",
+          )
+          legacy_security = legacy_security.replace(
+              "- Canonical action-repository scope:\n  - incorrect `action.yml` metadata\n  - broken README examples for the canonical action slug\n  - missing release tags or release notes in `hashgraph-online/ai-plugin-scanner-action`\n- Legacy compatibility scope:\n  - problems specific to `hashgraph-online/hol-codex-plugin-scanner-action`\n  - mirror drift between the canonical and compatibility repositories",
+              "- Action-repository scope:\n  - incorrect `action.yml` metadata\n  - Marketplace-specific packaging mistakes\n  - broken README examples for the published action\n- Canonical action-repository scope:\n  - incorrect sync from the canonical repository into `hashgraph-online/hol-codex-plugin-scanner-action`\n  - missing release tags or release notes in the compatibility repository",
+          )
+          legacy_security = legacy_security.replace(
+              "Legacy compatibility repository:\n\n- [hashgraph-online/hol-codex-plugin-scanner-action](https://github.com/hashgraph-online/hol-codex-plugin-scanner-action)",
+              "Canonical action repository:\n\n- [hashgraph-online/ai-plugin-scanner-action](https://github.com/hashgraph-online/ai-plugin-scanner-action)",
+          )
+          Path("legacy-repo/SECURITY.md").write_text(legacy_security)
+          PY
+
+      - name: Update legacy repository metadata
+        env:
+          GH_TOKEN: ${{ secrets.LEGACY_ACTION_REPO_TOKEN }}
+        run: |
+          gh repo edit "$TARGET_REPOSITORY" \
+            --description "Legacy compatibility GitHub Action slug for AI Plugin Scanner" \
+            --homepage "https://github.com/hashgraph-online/ai-plugin-scanner"
+
+      - name: Commit synced files if needed
+        run: |
+          cd legacy-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- README.md CONTRIBUTING.md SECURITY.md action.yml LICENSE scanner-version.txt cisco-version.txt pypi-attestations-version.txt .github/workflows/e2e-action.yml; then
+            exit 0
+          fi
+
+          git add README.md CONTRIBUTING.md SECURITY.md action.yml LICENSE scanner-version.txt cisco-version.txt pypi-attestations-version.txt .github/workflows/e2e-action.yml
+          git commit -m "chore: sync legacy action repo"
+          git push origin HEAD:main
+
+      - name: Mirror latest release tag into legacy repo
+        env:
+          GH_TOKEN: ${{ secrets.LEGACY_ACTION_REPO_TOKEN }}
+        run: |
+          latest_tag="$(gh release view --repo "$SOURCE_REPOSITORY" --json tagName --jq '.tagName')"
+          if [ -z "$latest_tag" ]; then
+            echo "No source release tag found; skipping release sync."
+            exit 0
+          fi
+
+          target_head="$(git -C legacy-repo rev-parse HEAD)"
+
+          if gh release view "$latest_tag" --repo "$TARGET_REPOSITORY" >/dev/null 2>&1; then
+            echo "Legacy release ${latest_tag} already exists."
+          else
+            if git -C legacy-repo ls-remote --exit-code --tags origin "refs/tags/${latest_tag}" >/dev/null 2>&1; then
+              echo "Legacy tag ${latest_tag} already exists without a release; creating release notes only."
+            else
+              git -C legacy-repo tag "$latest_tag" "$target_head"
+              git -C legacy-repo push origin "refs/tags/${latest_tag}"
+            fi
+
+            gh release create "$latest_tag" \
+              --repo "$TARGET_REPOSITORY" \
+              --generate-notes \
+              --target "$target_head" \
+              --title "$latest_tag"
+          fi
+
+          git -C legacy-repo tag -f v1 "$target_head"
+          git -C legacy-repo push origin "refs/tags/v1" --force
