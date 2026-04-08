@@ -1,0 +1,70 @@
+name: E2E Action Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feat/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout action repository
+        uses: actions/checkout@v4
+
+      - name: Checkout scanner fixtures
+        uses: actions/checkout@v4
+        with:
+          repository: hashgraph-online/ai-plugin-scanner
+          path: scanner-repo
+
+      - name: Run action in scan mode (real runner)
+        id: scan
+        uses: ./
+        with:
+          mode: scan
+          plugin_dir: scanner-repo/tests/fixtures/good-plugin
+          format: json
+          output: scanner-report.json
+          fail_on_severity: none
+          min_score: 0
+          pr_comment: auto
+          pr_comment_style: concise
+          pr_comment_max_findings: 5
+
+      - name: Validate action outputs
+        shell: bash
+        run: |
+          test -f scanner-report.json
+          test -n "${{ steps.scan.outputs.score }}"
+          test -n "${{ steps.scan.outputs.grade }}"
+          test -n "${{ steps.scan.outputs.grade_label }}"
+          test -n "${{ steps.scan.outputs.max_severity }}"
+          test -n "${{ steps.scan.outputs.findings_total }}"
+          test -n "${{ steps.scan.outputs.action_exit_code }}"
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            case "${{ steps.scan.outputs.pr_comment_status }}" in
+              created|updated|unchanged|skipped) ;;
+              *)
+                echo "Unexpected pr_comment_status: ${{ steps.scan.outputs.pr_comment_status }}" >&2
+                exit 1
+                ;;
+            esac
+          else
+            case "${{ steps.scan.outputs.pr_comment_status }}" in
+              skipped|disabled) ;;
+              *)
+                echo "Unexpected non-PR pr_comment_status: ${{ steps.scan.outputs.pr_comment_status }}" >&2
+                exit 1
+                ;;
+            esac
+          fi
