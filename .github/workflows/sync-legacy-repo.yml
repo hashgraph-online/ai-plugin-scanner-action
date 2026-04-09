@@ -12,6 +12,7 @@ on:
       - LICENSE
       - action.yml
       - scanner-version.txt
+      - scanner-sha256.txt
       - cisco-version.txt
       - pypi-attestations-version.txt
       - .github/workflows/e2e-action.yml
@@ -52,6 +53,7 @@ jobs:
             "action.yml"
             "LICENSE"
             "scanner-version.txt"
+            "scanner-sha256.txt"
             "cisco-version.txt"
             "pypi-attestations-version.txt"
             ".github/workflows/e2e-action.yml"
@@ -150,11 +152,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git diff --quiet -- README.md CONTRIBUTING.md SECURITY.md action.yml LICENSE scanner-version.txt cisco-version.txt pypi-attestations-version.txt .github/workflows/e2e-action.yml; then
+          if git diff --quiet -- README.md CONTRIBUTING.md SECURITY.md action.yml LICENSE scanner-version.txt scanner-sha256.txt cisco-version.txt pypi-attestations-version.txt .github/workflows/e2e-action.yml; then
             exit 0
           fi
 
-          git add README.md CONTRIBUTING.md SECURITY.md action.yml LICENSE scanner-version.txt cisco-version.txt pypi-attestations-version.txt .github/workflows/e2e-action.yml
+          git add README.md CONTRIBUTING.md SECURITY.md action.yml LICENSE scanner-version.txt scanner-sha256.txt cisco-version.txt pypi-attestations-version.txt .github/workflows/e2e-action.yml
           git commit -m "chore: sync legacy action repo"
           git push origin HEAD:main
 

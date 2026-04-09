@@ -219,14 +219,16 @@ runs:
           fi
         elif [ "$INSTALL_SOURCE" = "pypi" ]; then
           SCANNER_VERSION_FILE="$GITHUB_ACTION_PATH/scanner-version.txt"
+          SCANNER_SHA256_FILE="$GITHUB_ACTION_PATH/scanner-sha256.txt"
           CISCO_VERSION_FILE="$GITHUB_ACTION_PATH/cisco-version.txt"
           PYPI_ATTESTATIONS_VERSION_FILE="$GITHUB_ACTION_PATH/pypi-attestations-version.txt"
-          if [ ! -f "$SCANNER_VERSION_FILE" ] || [ ! -f "$CISCO_VERSION_FILE" ] || [ ! -f "$PYPI_ATTESTATIONS_VERSION_FILE" ]; then
+          if [ ! -f "$SCANNER_VERSION_FILE" ] || [ ! -f "$SCANNER_SHA256_FILE" ] || [ ! -f "$CISCO_VERSION_FILE" ] || [ ! -f "$PYPI_ATTESTATIONS_VERSION_FILE" ]; then
             echo "Action install metadata files are missing from the Marketplace bundle." >&2
             exit 1
           fi
 
           SCANNER_VERSION="$(tr -d '[:space:]' < "$SCANNER_VERSION_FILE")"
+          SCANNER_SHA256="$(tr -d '[:space:]' < "$SCANNER_SHA256_FILE")"
           CISCO_VERSION="$(tr -d '[:space:]' < "$CISCO_VERSION_FILE")"
           PYPI_ATTESTATIONS_VERSION="$(tr -d '[:space:]' < "$PYPI_ATTESTATIONS_VERSION_FILE")"
           SCANNER_REPOSITORY="https://github.com/hashgraph-online/ai-plugin-scanner"
@@ -239,6 +241,17 @@ runs:
           DIST_BASENAME="$(
             DIST_DIR="$DIST_DIR" python3 -c "import os; from pathlib import Path; dist_dir = Path(os.environ['DIST_DIR']); candidates = sorted(dist_dir.glob('plugin_scanner-*.whl')); expected = len(candidates) == 1; print(candidates[0].name) if expected else (_ for _ in ()).throw(SystemExit(f'Expected exactly one downloaded scanner wheel, found {len(candidates)}'))"
           )"
+
+          DIST_SHA256="$(
+            DIST_DIR="$DIST_DIR" DIST_BASENAME="$DIST_BASENAME" python3 -c "import hashlib, os; from pathlib import Path; wheel = Path(os.environ['DIST_DIR']) / os.environ['DIST_BASENAME']; print(hashlib.sha256(wheel.read_bytes()).hexdigest())"
+          )"
+
+          if [ "$DIST_SHA256" != "$SCANNER_SHA256" ]; then
+            echo "Downloaded scanner wheel SHA256 does not match scanner-sha256.txt." >&2
+            echo "Expected: $SCANNER_SHA256" >&2
+            echo "Actual:   $DIST_SHA256" >&2
+            exit 1
+          fi
 
           if ! python3 -m pypi_attestations verify pypi \
             --repository "$SCANNER_REPOSITORY" \
