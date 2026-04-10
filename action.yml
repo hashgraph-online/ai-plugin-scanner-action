@@ -1,4 +1,4 @@
-name: "AI Plugin Scanner"
+name: "HOL AI Plugin Scanner"
 description: "Scan AI plugin repositories for security, publishability, and best-practice quality signals."
 author: "HOL"
 
@@ -170,16 +170,16 @@ outputs:
     value: ${{ steps.scan.outputs.submission_issue_numbers }}
   action_exit_code:
     description: "Action execution exit code"
-    value: ${{ steps.normalized_outputs.outputs.action_exit_code }}
+    value: ${{ steps.scan.outputs.action_exit_code }}
   pr_comment_status:
     description: "PR comment status: created, updated, unchanged, skipped, or disabled"
-    value: ${{ steps.normalized_outputs.outputs.pr_comment_status }}
+    value: ${{ steps.scan.outputs.pr_comment_status }}
   pr_comment_id:
     description: "Created or updated PR comment id when available"
-    value: ${{ steps.normalized_outputs.outputs.pr_comment_id }}
+    value: ${{ steps.scan.outputs.pr_comment_id }}
   pr_comment_url:
     description: "Created or updated PR comment URL when available"
-    value: ${{ steps.normalized_outputs.outputs.pr_comment_url }}
+    value: ${{ steps.scan.outputs.pr_comment_url }}
 
 branding:
   icon: "check-circle"
@@ -219,16 +219,14 @@ runs:
           fi
         elif [ "$INSTALL_SOURCE" = "pypi" ]; then
           SCANNER_VERSION_FILE="$GITHUB_ACTION_PATH/scanner-version.txt"
-          SCANNER_SHA256_FILE="$GITHUB_ACTION_PATH/scanner-sha256.txt"
           CISCO_VERSION_FILE="$GITHUB_ACTION_PATH/cisco-version.txt"
           PYPI_ATTESTATIONS_VERSION_FILE="$GITHUB_ACTION_PATH/pypi-attestations-version.txt"
-          if [ ! -f "$SCANNER_VERSION_FILE" ] || [ ! -f "$SCANNER_SHA256_FILE" ] || [ ! -f "$CISCO_VERSION_FILE" ] || [ ! -f "$PYPI_ATTESTATIONS_VERSION_FILE" ]; then
+          if [ ! -f "$SCANNER_VERSION_FILE" ] || [ ! -f "$CISCO_VERSION_FILE" ] || [ ! -f "$PYPI_ATTESTATIONS_VERSION_FILE" ]; then
             echo "Action install metadata files are missing from the Marketplace bundle." >&2
             exit 1
           fi
 
           SCANNER_VERSION="$(tr -d '[:space:]' < "$SCANNER_VERSION_FILE")"
-          SCANNER_SHA256="$(tr -d '[:space:]' < "$SCANNER_SHA256_FILE")"
           CISCO_VERSION="$(tr -d '[:space:]' < "$CISCO_VERSION_FILE")"
           PYPI_ATTESTATIONS_VERSION="$(tr -d '[:space:]' < "$PYPI_ATTESTATIONS_VERSION_FILE")"
           SCANNER_REPOSITORY="https://github.com/hashgraph-online/ai-plugin-scanner"
@@ -241,17 +239,6 @@ runs:
           DIST_BASENAME="$(
             DIST_DIR="$DIST_DIR" python3 -c "import os; from pathlib import Path; dist_dir = Path(os.environ['DIST_DIR']); candidates = sorted(dist_dir.glob('plugin_scanner-*.whl')); expected = len(candidates) == 1; print(candidates[0].name) if expected else (_ for _ in ()).throw(SystemExit(f'Expected exactly one downloaded scanner wheel, found {len(candidates)}'))"
           )"
-
-          DIST_SHA256="$(
-            DIST_DIR="$DIST_DIR" DIST_BASENAME="$DIST_BASENAME" python3 -c "import hashlib, os; from pathlib import Path; wheel = Path(os.environ['DIST_DIR']) / os.environ['DIST_BASENAME']; print(hashlib.sha256(wheel.read_bytes()).hexdigest())"
-          )"
-
-          if [ "$DIST_SHA256" != "$SCANNER_SHA256" ]; then
-            echo "Downloaded scanner wheel SHA256 does not match scanner-sha256.txt." >&2
-            echo "Expected: $SCANNER_SHA256" >&2
-            echo "Actual:   $DIST_SHA256" >&2
-            exit 1
-          fi
 
           if ! python3 -m pypi_attestations verify pypi \
             --repository "$SCANNER_REPOSITORY" \
@@ -303,34 +290,6 @@ runs:
         PR_COMMENT_MAX_FINDINGS: ${{ inputs.pr_comment_max_findings }}
         GITHUB_STEP_SUMMARY: ${{ env.GITHUB_STEP_SUMMARY }}
       run: python3 -m codex_plugin_scanner.action_runner
-
-    - name: Normalize action outputs
-      id: normalized_outputs
-      if: ${{ always() }}
-      shell: bash
-      env:
-        SCAN_OUTCOME: ${{ steps.scan.outcome }}
-        ACTION_EXIT_CODE: ${{ steps.scan.outputs.action_exit_code }}
-        PR_COMMENT_STATUS: ${{ steps.scan.outputs.pr_comment_status }}
-        PR_COMMENT_ID: ${{ steps.scan.outputs.pr_comment_id }}
-        PR_COMMENT_URL: ${{ steps.scan.outputs.pr_comment_url }}
-      run: |
-        if [ -n "$ACTION_EXIT_CODE" ]; then
-          echo "action_exit_code=$ACTION_EXIT_CODE" >> "$GITHUB_OUTPUT"
-        elif [ "$SCAN_OUTCOME" = "success" ]; then
-          echo "action_exit_code=0" >> "$GITHUB_OUTPUT"
-        else
-          echo "action_exit_code=1" >> "$GITHUB_OUTPUT"
-        fi
-
-        if [ -n "$PR_COMMENT_STATUS" ]; then
-          echo "pr_comment_status=$PR_COMMENT_STATUS" >> "$GITHUB_OUTPUT"
-        else
-          echo "pr_comment_status=skipped" >> "$GITHUB_OUTPUT"
-        fi
-
-        echo "pr_comment_id=$PR_COMMENT_ID" >> "$GITHUB_OUTPUT"
-        echo "pr_comment_url=$PR_COMMENT_URL" >> "$GITHUB_OUTPUT"
 
     - name: Upload SARIF
       if: ${{ inputs.upload_sarif == 'true' && inputs.mode == 'scan' && steps.scan.outputs.report_path != '' }}
