@@ -207,7 +207,7 @@ runs:
             echo "install_source=local requires the source repository checkout (for example: uses: ./action inside ai-plugin-scanner)." >&2
             exit 1
           fi
-          python3 -m pip install "$LOCAL_SOURCE"
+          python3 -m pip install "$LOCAL_SOURCE[cisco]"
         elif [ "$INSTALL_SOURCE" = "pypi" ]; then
           SCANNER_VERSION_FILE="$GITHUB_ACTION_PATH/scanner-version.txt"
           CISCO_VERSION_FILE="$GITHUB_ACTION_PATH/cisco-version.txt"
