@@ -13,7 +13,7 @@ This repository is the canonical Marketplace-facing wrapper for the scanner acti
 
 The legacy action slug `hashgraph-online/hol-codex-plugin-scanner-action@v1` remains supported as a compatibility alias for existing workflows. New integrations should use `hashgraph-online/ai-plugin-scanner-action@v1`.
 
-The default Marketplace install path uses an exact `plugin-scanner` PyPI release, verifies its PyPI provenance against `hashgraph-online/ai-plugin-scanner`, and only then installs it. After installation, the default `scan`, `lint`, and offline `verify` paths operate on local repository content only. Live network probing and submission automation remain explicit opt-in features.
+The default Marketplace install path uses an exact `plugin-scanner` PyPI release, verifies its PyPI provenance against `hashgraph-online/ai-plugin-scanner`, and installs `cisco-ai-skill-scanner` at the exact version pinned in `cisco-version.txt`. After installation, the default `scan`, `lint`, and offline `verify` paths operate on local repository content only. Live network probing and submission automation remain explicit opt-in features.
 
 Advanced distribution paths are available when you need them:
 
@@ -51,7 +51,6 @@ Advanced distribution paths are available when you need them:
 | `fail_on_severity` | Fail on findings at or above this severity: `none`, `critical`, `high`, `medium`, `low`, `info` | `none` |
 | `cisco_skill_scan` | Cisco skill-scanner mode: `auto`, `on`, `off` | `auto` |
 | `cisco_policy` | Cisco policy preset: `permissive`, `balanced`, `strict` | `balanced` |
-| `install_cisco` | Install the opt-in Cisco skill-scanner dependency used by this repo | `false` |
 | `install_source` | Package install source: `pypi` for the reviewed release path, or `local` for source-repo dogfooding | `pypi` |
 | `submission_enabled` | Open submission issues for awesome-list and registry automation when the plugin clears the submission threshold | `false` |
 | `submission_score_threshold` | Minimum score required before a submission issue is created | `80` |
@@ -141,7 +140,6 @@ This `plugin_dir: "."` pattern is correct for both single-plugin repositories an
     plugin_dir: "."
     cisco_skill_scan: on
     cisco_policy: strict
-    install_cisco: true
 ```
 
 ### Dogfood the source-repo action bundle
