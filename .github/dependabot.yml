@@ -12,7 +12,7 @@ updates:
       - "dependencies"
       - "github-actions"
     commit-message:
-      prefix: "deps(actions)"
+      prefix: "chore(deps)"
     groups:
       github-actions-all:
         patterns:
