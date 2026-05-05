@@ -276,3 +276,4 @@ docker run --rm \
 ```
 
 The image installs the scanner from the reviewed source tree at release build time. It is separate from the Marketplace action so teams that prefer `docker://` or explicit `docker run` flows can use a pinned image without changing the secure default action path.
+
