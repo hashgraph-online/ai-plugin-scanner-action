@@ -309,7 +309,7 @@ runs:
 
     - name: Upload SARIF
       if: ${{ inputs.upload_sarif == 'true' && inputs.mode == 'scan' && steps.scan.outputs.report_path != '' }}
-      uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7
+      uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e
       with:
         sarif_file: ${{ steps.scan.outputs.report_path }}
         category: ${{ inputs.sarif_category }}
