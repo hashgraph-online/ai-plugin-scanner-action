@@ -189,7 +189,7 @@ runs:
   using: "composite"
   steps:
     - name: Set up Python
-      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
       with:
         python-version: "3.12"
 
@@ -309,7 +309,7 @@ runs:
 
     - name: Upload SARIF
       if: ${{ inputs.upload_sarif == 'true' && inputs.mode == 'scan' && steps.scan.outputs.report_path != '' }}
-      uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7
+      uses: github/codeql-action/upload-sarif@7188fc363630916deb702c7fdcf4e481b751f97a
       with:
         sarif_file: ${{ steps.scan.outputs.report_path }}
         category: ${{ inputs.sarif_category }}
