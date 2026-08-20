@@ -15,6 +15,8 @@ The legacy action slug `hashgraph-online/hol-codex-plugin-scanner-action@v1` rem
 
 The default Marketplace install path uses an exact `plugin-scanner` PyPI release, verifies its PyPI provenance against `hashgraph-online/hol-guard`, and only then installs it. After installation, the default `scan`, `lint`, and offline `verify` paths operate on local repository content only. Live network probing and submission automation remain explicit opt-in features.
 
+A snapshot of catalog scores, modeled runtime fixtures, and public advisories is published as [HOL Plugin Security](https://huggingface.co/datasets/HashgraphOnline/hol-plugin-security). Scan ≠ safety.
+
 Advanced distribution paths are available when you need them:
 
 - `install_source: local` is the explicit dogfood path for `uses: ./action` inside the source repo.
