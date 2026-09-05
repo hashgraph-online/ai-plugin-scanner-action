@@ -24,7 +24,7 @@ Advanced distribution paths are available when you need them:
 
 ```yaml
 - name: Scan AI Plugin Repository
-  uses: hashgraph-online/ai-plugin-scanner-action@v1.2.604
+  uses: hashgraph-online/ai-plugin-scanner-action@v1.2.605
   with:
     plugin_dir: "./my-plugin"
     min_score: 70
@@ -119,7 +119,7 @@ Mode notes:
 ### Basic scan with minimum score gate
 
 ```yaml
-- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.604
+- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.605
   with:
     plugin_dir: "."
     min_score: 70
@@ -137,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: hashgraph-online/ai-plugin-scanner-action@v1.2.604
+      - uses: hashgraph-online/ai-plugin-scanner-action@v1.2.605
         with:
           plugin_dir: "."
           mode: scan
@@ -151,7 +151,7 @@ This `plugin_dir: "."` pattern is correct for both single-plugin repositories an
 ### With Cisco skill scanning
 
 ```yaml
-- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.604
+- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.605
   with:
     plugin_dir: "."
     cisco_skill_scan: on
@@ -173,7 +173,7 @@ Use this only inside `hashgraph-online/hol-guard`, where the action can install 
 ### Export registry payload for ecosystem automation
 
 ```yaml
-- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.604
+- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.605
   id: scan
   with:
     plugin_dir: "."
@@ -206,7 +206,7 @@ jobs:
 
       - name: Scan plugin and submit if eligible
         id: scan
-        uses: hashgraph-online/ai-plugin-scanner-action@v1.2.604
+        uses: hashgraph-online/ai-plugin-scanner-action@v1.2.605
         with:
           plugin_dir: "."
           min_score: 80
@@ -225,7 +225,7 @@ Use a fine-grained token with `issues:write` on `hashgraph-online/awesome-codex-
 ### Markdown report as PR comment
 
 ```yaml
-- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.604
+- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.605
   id: scan
   with:
     plugin_dir: "."
@@ -271,7 +271,7 @@ Direct edits in published action repositories should stay limited to Marketplace
 Set `mode` to one of `scan`, `lint`, `verify`, or `submit`.
 
 ```yaml
-- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.604
+- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.605
   with:
     mode: verify
     plugin_dir: "."
