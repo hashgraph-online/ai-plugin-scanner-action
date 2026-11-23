@@ -28,7 +28,7 @@ Public plugin repositories can be listed in the [HOL Plugins marketplace](https:
 
 ```yaml
 - name: Scan AI Plugin Repository
-  uses: hashgraph-online/ai-plugin-scanner-action@v1.2.819
+  uses: hashgraph-online/ai-plugin-scanner-action@v1.2.820
   with:
     plugin_dir: "./my-plugin"
     min_score: 70
@@ -112,6 +112,8 @@ Security-conscious consumers should prefer the commit-SHA form, the same guidanc
 
 The action also writes a concise summary to `GITHUB_STEP_SUMMARY` by default. The full report is written to the job log for `text` output, or to the file you pass through `output` for `json`, `markdown`, or `sarif`.
 
+When the scanned package declares a runtime-bearing surface, `scan` text, Markdown, and JSON reports and job summaries for `scan`, `lint`, and `submit` modes add a report-only **Guard coverage context** section. Lint text and JSON reports and all `verify` outputs omit it. The section links the relevant harness claim and local installation guide. This context is derived from the repository's checked-in coverage contract and does not probe a host, install Guard, or make a network request. It is omitted when no mapped runtime surface is detected. The [coverage context contract](https://github.com/hashgraph-online/hol-guard/blob/main/docs/guard/scanner-coverage-bridge.md) documents the JSON shape.
+
 Mode notes:
 
 - `scan` and `lint` respect `profile`, `config`, and `baseline`.
@@ -126,7 +128,7 @@ Mode notes:
     contents: read
     pull-requests: write
   steps:
-    - uses: hashgraph-online/ai-plugin-scanner-action@v1.2.819
+    - uses: hashgraph-online/ai-plugin-scanner-action@v1.2.820
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   ```
@@ -136,7 +138,7 @@ Mode notes:
 ### Basic scan with minimum score gate
 
 ```yaml
-- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.819
+- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.820
   with:
     plugin_dir: "."
     min_score: 70
@@ -154,7 +156,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: hashgraph-online/ai-plugin-scanner-action@v1.2.819
+      - uses: hashgraph-online/ai-plugin-scanner-action@v1.2.820
         with:
           plugin_dir: "."
           mode: scan
@@ -168,7 +170,7 @@ This `plugin_dir: "."` pattern is correct for both single-plugin repositories an
 ### With Cisco skill scanning
 
 ```yaml
-- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.819
+- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.820
   with:
     plugin_dir: "."
     cisco_skill_scan: on
@@ -190,7 +192,7 @@ Use this only inside `hashgraph-online/hol-guard`, where the action can install 
 ### Export registry payload for ecosystem automation
 
 ```yaml
-- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.819
+- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.820
   id: scan
   with:
     plugin_dir: "."
@@ -223,7 +225,7 @@ jobs:
 
       - name: Scan plugin and submit if eligible
         id: scan
-        uses: hashgraph-online/ai-plugin-scanner-action@v1.2.819
+        uses: hashgraph-online/ai-plugin-scanner-action@v1.2.820
         with:
           plugin_dir: "."
           min_score: 80
@@ -242,7 +244,7 @@ Use a fine-grained token with `issues:write` on `hashgraph-online/awesome-codex-
 ### Markdown report as PR comment
 
 ```yaml
-- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.819
+- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.820
   id: scan
   with:
     plugin_dir: "."
@@ -288,7 +290,7 @@ Direct edits in published action repositories should stay limited to Marketplace
 Set `mode` to one of `scan`, `lint`, `verify`, or `submit`.
 
 ```yaml
-- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.819
+- uses: hashgraph-online/ai-plugin-scanner-action@v1.2.820
   with:
     mode: verify
     plugin_dir: "."
